@@ -13,13 +13,13 @@ export default function Home() {
 
   async function buscarMensagemDoDia() {
     const { data, error } = await supabase
-      .from('mensagens')
-      .select('*')
-      .order('criado_em', { ascending: true })
-      .limit(1)
+      .from('mensagem_do_dia')
+      .select('mensagem_id, mensagens(texto, criado_em)')
+      .eq('id', 1)
+      .single()
 
-    if (data && data.length > 0) {
-      setMensagemDoDia(data[0])
+    if (data?.mensagens) {
+      setMensagemDoDia(data.mensagens)
     }
     setLoading(false)
   }
