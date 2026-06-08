@@ -22,6 +22,17 @@ function useContagem() {
   return tempo
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  return mobile
+}
+
 export default function Home() {
   const [mensagemDoDia, setMensagemDoDia] = useState(null)
   const [total, setTotal] = useState(null)
@@ -31,6 +42,7 @@ export default function Home() {
   const [copiado, setCopiado] = useState(false)
   const [erro, setErro] = useState('')
   const tempoRestante = useContagem()
+  const isMobile = useIsMobile()
 
   useEffect(() => { buscarDados() }, [])
 
@@ -54,13 +66,19 @@ export default function Home() {
     if (texto.trim().length < 3) return
     setErro('')
 
+    const ipRes = await fetch('/api/checar-ip', { method: 'POST' })
+    const { ok: ipOk } = await ipRes.json()
+    if (!ipOk) {
+      setErro('você já enviou o máximo de mensagens hoje. volte amanhã.')
+      return
+    }
+
     const modRes = await fetch('/api/moderar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texto: texto.trim() }),
     })
     const { ok: aprovado } = await modRes.json()
-
     if (!aprovado) {
       setErro('essa mensagem não pôde ser enviada. tente algo diferente.')
       return
@@ -100,17 +118,34 @@ export default function Home() {
     fontWeight: 400,
   }
 
+  const secaoEsquerda = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: isMobile ? '48px 0 40px' : '56px 48px 56px 0',
+    borderRight: isMobile ? 'none' : '1px solid #35353a',
+    borderBottom: isMobile ? '1px solid #35353a' : 'none',
+  }
+
+  const secaoDireita = {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    padding: isMobile ? '40px 0 64px' : '56px 0 56px 48px',
+  }
+
   return (
     <main style={{
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column',
-      padding: '0 48px',
+      padding: isMobile ? '0 24px' : '0 48px',
       maxWidth: '1000px',
       margin: '0 auto',
       width: '100%',
     }}>
 
+      {/* HEADER */}
       <header style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -121,26 +156,21 @@ export default function Home() {
         <span style={{ ...label, color: '#c8c4bc' }}>your words</span>
         {total !== null && (
           <span style={{ fontSize: '12px', color: '#8a8a8e' }}>
-            {total.toLocaleString('pt-BR')} mensagens no acervo
+            {total.toLocaleString('pt-BR')} mensagens
           </span>
         )}
       </header>
 
+      {/* GRID */}
       <div style={{
         flex: 1,
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        minHeight: 'calc(100vh - 80px)',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        minHeight: isMobile ? 'auto' : 'calc(100vh - 80px)',
       }}>
 
-        {/* ESQUERDA */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '56px 48px 56px 0',
-          borderRight: '1px solid #35353a',
-        }}>
+        {/* ESQUERDA — mensagem do dia */}
+        <div style={secaoEsquerda}>
           <p style={{ ...label, color: '#9a9a9e', marginBottom: '32px' }} className="fade-up">
             {hoje}
           </p>
@@ -151,7 +181,7 @@ export default function Home() {
             <>
               <p className="fade-up-delay" style={{
                 fontFamily: "'DM Serif Display', serif",
-                fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)',
+                fontSize: isMobile ? '2rem' : 'clamp(1.8rem, 3.5vw, 2.8rem)',
                 lineHeight: 1.2,
                 color: '#f5f1ea',
                 marginBottom: '32px',
@@ -159,7 +189,7 @@ export default function Home() {
               }}>
                 "{mensagemDoDia.texto}"
               </p>
-              <p className="fade-up-delay-2" style={{ fontSize: '11px', color: '#8a8a8e', marginBottom: '48px' }}>
+              <p className="fade-up-delay-2" style={{ fontSize: '11px', color: '#8a8a8e', marginBottom: '40px' }}>
                 recebida em {new Date(mensagemDoDia.criado_em).toLocaleDateString('pt-BR')}
               </p>
             </>
@@ -169,7 +199,7 @@ export default function Home() {
               fontSize: '2rem',
               fontStyle: 'italic',
               color: '#444',
-              marginBottom: '48px',
+              marginBottom: '40px',
             }}>
               "nenhuma mensagem ainda."
             </p>
@@ -207,13 +237,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* DIREITA */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '56px 0 56px 48px',
-        }}>
+        {/* DIREITA — formulário */}
+        <div style={secaoDireita}>
           <p style={{ ...label, marginBottom: '12px' }}>sua vez</p>
 
           <p style={{
