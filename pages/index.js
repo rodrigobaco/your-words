@@ -1,78 +1,113 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabase'
 
 export default function Home() {
+  const [mensagemDoDia, setMensagemDoDia] = useState(null)
+  const [texto, setTexto] = useState('')
+  const [enviado, setEnviado] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    buscarMensagemDoDia()
+  }, [])
+
+  async function buscarMensagemDoDia() {
+    const { data, error } = await supabase
+      .from('mensagens')
+      .select('*')
+      .order('criado_em', { ascending: true })
+      .limit(1)
+
+    if (data && data.length > 0) {
+      setMensagemDoDia(data[0])
+    }
+    setLoading(false)
+  }
+
+  async function enviarMensagem() {
+    if (texto.trim().length < 3) return
+
+    const { error } = await supabase
+      .from('mensagens')
+      .insert([{ texto: texto.trim() }])
+
+    if (!error) {
+      setEnviado(true)
+      setTexto('')
+    }
+  }
+
+  const hoje = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  })
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16">
+      <div className="w-full max-w-xl">
+
+        <p className="text-xs uppercase tracking-widest text-stone-400 mb-1">
+          {hoje}
+        </p>
+        <h1 className="text-2xl font-normal text-stone-700 mb-10">
+          mensagem do dia
+        </h1>
+
+        <div className="border border-stone-200 rounded-xl p-8 mb-12 bg-white">
+          {loading ? (
+            <p className="text-stone-400 text-sm">carregando...</p>
+          ) : mensagemDoDia ? (
+            <>
+              <p className="text-xl leading-relaxed text-stone-700 mb-4">
+                "{mensagemDoDia.texto}"
+              </p>
+              <p className="text-xs text-stone-400">
+                enviado em {new Date(mensagemDoDia.criado_em).toLocaleDateString('pt-BR')}
+              </p>
+            </>
+          ) : (
+            <p className="text-stone-400 text-sm italic">
+              nenhuma mensagem ainda. seja o primeiro.
+            </p>
+          )}
+        </div>
+
+        <div>
+          <p className="text-sm text-stone-500 mb-1 font-medium">
+            deixe sua mensagem
           </p>
+          <p className="text-xs text-stone-400 mb-4">
+            qualquer coisa. um pensamento, uma frase. talvez amanhã seja a sua.
+          </p>
+
+          {enviado ? (
+            <p className="text-sm text-stone-500 italic">
+              recebido. boa sorte no sorteio de amanhã ✦
+            </p>
+          ) : (
+            <>
+              <textarea
+                className="w-full border border-stone-200 rounded-lg p-4 text-sm text-stone-700 bg-white resize-none outline-none focus:border-stone-400 transition"
+                rows={4}
+                maxLength={240}
+                placeholder="escreva algo..."
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+              />
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-xs text-stone-300">{texto.length}/240</span>
+                <button
+                  onClick={enviarMensagem}
+                  disabled={texto.trim().length < 3}
+                  className="text-sm px-5 py-2 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-100 transition disabled:opacity-30"
+                >
+                  enviar
+                </button>
+              </div>
+            </>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+
+      </div>
+    </main>
+  )
 }
