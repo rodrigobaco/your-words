@@ -33,6 +33,15 @@ function useIsMobile() {
   return mobile
 }
 
+function getDeviceId() {
+  let id = localStorage.getItem('yw_device_id')
+  if (!id) {
+    id = Math.random().toString(36).slice(2) + Date.now().toString(36)
+    localStorage.setItem('yw_device_id', id)
+  }
+  return id
+}
+
 export default function Home() {
   const [mensagemDoDia, setMensagemDoDia] = useState(null)
   const [total, setTotal] = useState(null)
@@ -66,10 +75,14 @@ export default function Home() {
     if (texto.trim().length < 3) return
     setErro('')
 
-    const ipRes = await fetch('/api/checar-ip', { method: 'POST' })
+    const ipRes = await fetch('/api/checar-ip', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId: getDeviceId() }),
+    })
     const { ok: ipOk } = await ipRes.json()
     if (!ipOk) {
-      setErro('você já enviou o máximo de mensagens hoje. volte amanhã.')
+      setErro('você já enviou sua mensagem hoje. volte amanhã.')
       return
     }
 
