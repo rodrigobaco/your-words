@@ -88,7 +88,7 @@ export default function Home() {
     })
     const { ok: ipOk } = await ipRes.json()
     if (!ipOk) {
-      setErro('você já enviou sua mensagem hoje. volte amanhã.')
+      setErro("you've already sent your message today. come back tomorrow.")
       return
     }
 
@@ -99,7 +99,7 @@ export default function Home() {
     })
     const { ok: aprovado } = await modRes.json()
     if (!aprovado) {
-      setErro('essa mensagem não pôde ser enviada. tente algo diferente.')
+      setErro("this message couldn't be sent. please try something different.")
       return
     }
 
@@ -132,13 +132,13 @@ export default function Home() {
     setTimeout(() => setCopiado(false), 2000)
   }
 
-  const hoje = new Date().toLocaleDateString('pt-BR', {
+  const hoje = new Date().toLocaleDateString('en-US', {
     weekday: 'long', day: 'numeric', month: 'long'
   })
 
   const metaDescricao = mensagemDoDia
-    ? `"${mensagemDoDia.texto}" — a mensagem de hoje no your words.`
-    : 'todo dia uma mensagem de alguém do mundo fica aqui.'
+    ? `"${mensagemDoDia.texto}" — today's message on your words.`
+    : 'every day, one message from someone in the world stays here.'
 
   const label = {
     fontSize: '11px',
@@ -199,7 +199,7 @@ export default function Home() {
           <span style={{ ...label, color: '#c8c4bc' }}>your words</span>
           {total !== null && (
             <span style={{ fontSize: '12px', color: '#8a8a8e' }}>
-              {total.toLocaleString('pt-BR')} mensagens
+              {total.toLocaleString('en-US')} messages
             </span>
           )}
         </header>
@@ -231,7 +231,7 @@ export default function Home() {
                   "{mensagemDoDia.texto}"
                 </p>
                 <p className="fade-up-delay-2" style={{ fontSize: '11px', color: '#8a8a8e', marginBottom: '40px' }}>
-                  recebida em {new Date(mensagemDoDia.criado_em).toLocaleDateString('pt-BR')}
+                  received on {new Date(mensagemDoDia.criado_em).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </p>
               </>
             ) : (
@@ -242,13 +242,13 @@ export default function Home() {
                 color: '#444',
                 marginBottom: '40px',
               }}>
-                "nenhuma mensagem ainda."
+                "no messages yet."
               </p>
             )}
 
             <div className="fade-up-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <p style={{ ...label, fontSize: '10px', color: '#666', marginBottom: '6px' }}>próxima em</p>
+                <p style={{ ...label, fontSize: '10px', color: '#666', marginBottom: '6px' }}>next message in</p>
                 <p style={{
                   fontFamily: 'monospace',
                   fontSize: '1.4rem',
@@ -272,14 +272,14 @@ export default function Home() {
                 onMouseEnter={e => e.target.style.color = '#c8c4bc'}
                 onMouseLeave={e => e.target.style.color = '#777'}
                 >
-                  {copiado ? 'link copiado ✓' : 'compartilhar ↗'}
+                  {copiado ? 'link copied ✓' : 'share ↗'}
                 </button>
               )}
             </div>
           </div>
 
           <div style={secaoDireita}>
-            <p style={{ ...label, marginBottom: '12px' }}>sua vez</p>
+            <p style={{ ...label, marginBottom: '12px' }}>your turn</p>
 
             <p style={{
               fontFamily: "'DM Serif Display', serif",
@@ -289,7 +289,7 @@ export default function Home() {
               marginBottom: '40px',
               lineHeight: 1.6,
             }}>
-              qualquer coisa. um pensamento, uma frase.
+              Leave your words here.
             </p>
 
             {enviado ? (
@@ -301,11 +301,11 @@ export default function Home() {
                   color: '#9a9a9e',
                   marginBottom: '16px',
                 }}>
-                  recebido ✦
+                  received ✦
                 </p>
                 <p style={{ fontSize: '12px', color: '#666', lineHeight: 1.9 }}>
-                  sua mensagem entrou no sorteio.<br />
-                  volte amanhã às 3h — pode ser a sua.
+                  your message is in the draw.<br />
+                  come back tomorrow at 3am — it might be yours.
                 </p>
               </div>
             ) : (
@@ -320,7 +320,7 @@ export default function Home() {
                     value={texto}
                     onChange={e => setTexto(e.target.value)}
                     maxLength={240}
-                    placeholder="escreva algo..."
+                    placeholder="write something..."
                     rows={4}
                     onFocus={() => setFocado(true)}
                     onBlur={() => setFocado(false)}
@@ -370,7 +370,7 @@ export default function Home() {
                       e.target.style.borderColor = '#555'
                     }}
                   >
-                    enviar
+                    send
                   </button>
                 </div>
 
@@ -384,8 +384,8 @@ export default function Home() {
 
             <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid #2e2e32' }}>
               <p style={{ fontSize: '11px', color: '#555', lineHeight: 1.9 }}>
-                todo dia uma mensagem de alguém do mundo<br />
-                fica aqui. hoje é essa.
+                every day, one message from someone in the world<br />
+                stays here for 24 hours.
               </p>
             </div>
           </div>
