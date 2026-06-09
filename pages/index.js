@@ -116,13 +116,20 @@ export default function Home() {
 
   function compartilhar() {
     const url = window.location.href
-    if (navigator.share) {
-      navigator.share({ title: 'your words', text: mensagemDoDia?.texto, url })
-    } else {
+    try {
+      const el = document.createElement('textarea')
+      el.value = url
+      el.style.position = 'fixed'
+      el.style.opacity = '0'
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+    } catch {
       navigator.clipboard.writeText(url)
-      setCopiado(true)
-      setTimeout(() => setCopiado(false), 2000)
     }
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
   }
 
   const hoje = new Date().toLocaleDateString('pt-BR', {
@@ -162,18 +169,13 @@ export default function Home() {
       <Head>
         <title>your words</title>
         <meta name="description" content={metaDescricao} />
-
-        {/* Open Graph — WhatsApp, Facebook, LinkedIn */}
         <meta property="og:title" content="your words" />
         <meta property="og:description" content={metaDescricao} />
         <meta property="og:url" content="https://your-words-henna.vercel.app" />
         <meta property="og:type" content="website" />
-
-        {/* Twitter */}
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="your words" />
         <meta name="twitter:description" content={metaDescricao} />
-
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
@@ -187,7 +189,6 @@ export default function Home() {
         width: '100%',
       }}>
 
-        {/* HEADER */}
         <header style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -203,7 +204,6 @@ export default function Home() {
           )}
         </header>
 
-        {/* GRID */}
         <div style={{
           flex: 1,
           display: 'grid',
@@ -211,7 +211,6 @@ export default function Home() {
           minHeight: isMobile ? 'auto' : 'calc(100vh - 80px)',
         }}>
 
-          {/* ESQUERDA */}
           <div style={secaoEsquerda}>
             <p style={{ ...label, color: '#9a9a9e', marginBottom: '32px' }} className="fade-up">
               {hoje}
@@ -273,13 +272,12 @@ export default function Home() {
                 onMouseEnter={e => e.target.style.color = '#c8c4bc'}
                 onMouseLeave={e => e.target.style.color = '#777'}
                 >
-                  {copiado ? 'copiado ✓' : 'compartilhar ↗'}
+                  {copiado ? 'link copiado ✓' : 'compartilhar ↗'}
                 </button>
               )}
             </div>
           </div>
 
-          {/* DIREITA */}
           <div style={secaoDireita}>
             <p style={{ ...label, marginBottom: '12px' }}>sua vez</p>
 
