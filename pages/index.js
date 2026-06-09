@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Head from 'next/head'
 import { supabase } from '../lib/supabase'
 
 function useContagem() {
@@ -34,12 +35,16 @@ function useIsMobile() {
 }
 
 function getDeviceId() {
-  let id = localStorage.getItem('yw_device_id')
-  if (!id) {
-    id = Math.random().toString(36).slice(2) + Date.now().toString(36)
-    localStorage.setItem('yw_device_id', id)
+  try {
+    let id = localStorage.getItem('yw_device_id')
+    if (!id) {
+      id = Math.random().toString(36).slice(2) + Date.now().toString(36)
+      localStorage.setItem('yw_device_id', id)
+    }
+    return id
+  } catch {
+    return Math.random().toString(36).slice(2)
   }
-  return id
 }
 
 export default function Home() {
@@ -50,6 +55,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [copiado, setCopiado] = useState(false)
   const [erro, setErro] = useState('')
+  const [focado, setFocado] = useState(false)
   const tempoRestante = useContagem()
   const isMobile = useIsMobile()
 
@@ -123,6 +129,10 @@ export default function Home() {
     weekday: 'long', day: 'numeric', month: 'long'
   })
 
+  const metaDescricao = mensagemDoDia
+    ? `"${mensagemDoDia.texto}" — a mensagem de hoje no your words.`
+    : 'todo dia uma mensagem de alguém do mundo fica aqui.'
+
   const label = {
     fontSize: '11px',
     letterSpacing: '0.18em',
@@ -148,215 +158,242 @@ export default function Home() {
   }
 
   return (
-    <main style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      padding: isMobile ? '0 24px' : '0 48px',
-      maxWidth: '1000px',
-      margin: '0 auto',
-      width: '100%',
-    }}>
+    <>
+      <Head>
+        <title>your words</title>
+        <meta name="description" content={metaDescricao} />
 
-      {/* HEADER */}
-      <header style={{
+        {/* Open Graph — WhatsApp, Facebook, LinkedIn */}
+        <meta property="og:title" content="your words" />
+        <meta property="og:description" content={metaDescricao} />
+        <meta property="og:url" content="https://your-words-henna.vercel.app" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="your words" />
+        <meta name="twitter:description" content={metaDescricao} />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+
+      <main style={{
+        minHeight: '100vh',
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '28px 0',
-        borderBottom: '1px solid #35353a',
-      }}>
-        <span style={{ ...label, color: '#c8c4bc' }}>your words</span>
-        {total !== null && (
-          <span style={{ fontSize: '12px', color: '#8a8a8e' }}>
-            {total.toLocaleString('pt-BR')} mensagens
-          </span>
-        )}
-      </header>
-
-      {/* GRID */}
-      <div style={{
-        flex: 1,
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        minHeight: isMobile ? 'auto' : 'calc(100vh - 80px)',
+        flexDirection: 'column',
+        padding: isMobile ? '0 24px' : '0 48px',
+        maxWidth: '1000px',
+        margin: '0 auto',
+        width: '100%',
       }}>
 
-        {/* ESQUERDA — mensagem do dia */}
-        <div style={secaoEsquerda}>
-          <p style={{ ...label, color: '#9a9a9e', marginBottom: '32px' }} className="fade-up">
-            {hoje}
-          </p>
+        {/* HEADER */}
+        <header style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '28px 0',
+          borderBottom: '1px solid #35353a',
+        }}>
+          <span style={{ ...label, color: '#c8c4bc' }}>your words</span>
+          {total !== null && (
+            <span style={{ fontSize: '12px', color: '#8a8a8e' }}>
+              {total.toLocaleString('pt-BR')} mensagens
+            </span>
+          )}
+        </header>
 
-          {loading ? (
-            <p style={{ color: '#444', fontSize: '14px' }}>—</p>
-          ) : mensagemDoDia ? (
-            <>
-              <p className="fade-up-delay" style={{
+        {/* GRID */}
+        <div style={{
+          flex: 1,
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          minHeight: isMobile ? 'auto' : 'calc(100vh - 80px)',
+        }}>
+
+          {/* ESQUERDA */}
+          <div style={secaoEsquerda}>
+            <p style={{ ...label, color: '#9a9a9e', marginBottom: '32px' }} className="fade-up">
+              {hoje}
+            </p>
+
+            {loading ? (
+              <p style={{ color: '#444', fontSize: '14px' }}>—</p>
+            ) : mensagemDoDia ? (
+              <>
+                <p className="fade-up-delay" style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: isMobile ? '2rem' : 'clamp(1.8rem, 3.5vw, 2.8rem)',
+                  lineHeight: 1.2,
+                  color: '#f5f1ea',
+                  marginBottom: '32px',
+                  fontStyle: 'italic',
+                }}>
+                  "{mensagemDoDia.texto}"
+                </p>
+                <p className="fade-up-delay-2" style={{ fontSize: '11px', color: '#8a8a8e', marginBottom: '40px' }}>
+                  recebida em {new Date(mensagemDoDia.criado_em).toLocaleDateString('pt-BR')}
+                </p>
+              </>
+            ) : (
+              <p style={{
                 fontFamily: "'DM Serif Display', serif",
-                fontSize: isMobile ? '2rem' : 'clamp(1.8rem, 3.5vw, 2.8rem)',
-                lineHeight: 1.2,
-                color: '#f5f1ea',
-                marginBottom: '32px',
+                fontSize: '2rem',
                 fontStyle: 'italic',
+                color: '#444',
+                marginBottom: '40px',
               }}>
-                "{mensagemDoDia.texto}"
+                "nenhuma mensagem ainda."
               </p>
-              <p className="fade-up-delay-2" style={{ fontSize: '11px', color: '#8a8a8e', marginBottom: '40px' }}>
-                recebida em {new Date(mensagemDoDia.criado_em).toLocaleDateString('pt-BR')}
-              </p>
-            </>
-          ) : (
+            )}
+
+            <div className="fade-up-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <p style={{ ...label, fontSize: '10px', color: '#666', marginBottom: '6px' }}>próxima em</p>
+                <p style={{
+                  fontFamily: 'monospace',
+                  fontSize: '1.4rem',
+                  color: '#8a8a8e',
+                  letterSpacing: '0.1em',
+                }}>
+                  {tempoRestante}
+                </p>
+              </div>
+              {mensagemDoDia && (
+                <button onClick={compartilhar} style={{
+                  alignSelf: 'flex-start',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  ...label,
+                  color: copiado ? '#9a9a9e' : '#777',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={e => e.target.style.color = '#c8c4bc'}
+                onMouseLeave={e => e.target.style.color = '#777'}
+                >
+                  {copiado ? 'copiado ✓' : 'compartilhar ↗'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* DIREITA */}
+          <div style={secaoDireita}>
+            <p style={{ ...label, marginBottom: '12px' }}>sua vez</p>
+
             <p style={{
               fontFamily: "'DM Serif Display', serif",
-              fontSize: '2rem',
+              fontSize: '1.2rem',
               fontStyle: 'italic',
-              color: '#444',
+              color: '#8a8a92',
               marginBottom: '40px',
+              lineHeight: 1.6,
             }}>
-              "nenhuma mensagem ainda."
+              qualquer coisa. um pensamento, uma frase.
             </p>
-          )}
 
-          <div className="fade-up-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div>
-              <p style={{ ...label, fontSize: '10px', color: '#666', marginBottom: '6px' }}>próxima em</p>
-              <p style={{
-                fontFamily: 'monospace',
-                fontSize: '1.4rem',
-                color: '#8a8a8e',
-                letterSpacing: '0.1em',
-              }}>
-                {tempoRestante}
-              </p>
-            </div>
-            {mensagemDoDia && (
-              <button onClick={compartilhar} style={{
-                alignSelf: 'flex-start',
-                background: 'transparent',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                ...label,
-                color: copiado ? '#9a9a9e' : '#777',
-                transition: 'color 0.2s',
-              }}
-              onMouseEnter={e => e.target.style.color = '#c8c4bc'}
-              onMouseLeave={e => e.target.style.color = '#777'}
-              >
-                {copiado ? 'copiado ✓' : 'compartilhar ↗'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* DIREITA — formulário */}
-        <div style={secaoDireita}>
-          <p style={{ ...label, marginBottom: '12px' }}>sua vez</p>
-
-          <p style={{
-            fontFamily: "'DM Serif Display', serif",
-            fontSize: '1.2rem',
-            fontStyle: 'italic',
-            color: '#8a8a92',
-            marginBottom: '40px',
-            lineHeight: 1.6,
-          }}>
-            qualquer coisa. um pensamento, uma frase.
-          </p>
-
-          {enviado ? (
-            <div>
-              <p style={{
-                fontFamily: "'DM Serif Display', serif",
-                fontSize: '1.3rem',
-                fontStyle: 'italic',
-                color: '#9a9a9e',
-                marginBottom: '16px',
-              }}>
-                recebido ✦
-              </p>
-              <p style={{ fontSize: '12px', color: '#666', lineHeight: 1.9 }}>
-                sua mensagem entrou no sorteio.<br />
-                volte amanhã às 3h — pode ser a sua.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div style={{ borderBottom: '1px solid #35353a', paddingBottom: '12px', marginBottom: '20px' }}>
-                <textarea
-                  value={texto}
-                  onChange={e => setTexto(e.target.value)}
-                  maxLength={240}
-                  placeholder="escreva algo..."
-                  rows={4}
-                  style={{
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: '#f0ece4',
-                    fontSize: '0.95rem',
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontWeight: 300,
-                    resize: 'none',
-                    lineHeight: 1.8,
-                    caretColor: '#f0ece4',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#555' }}>{texto.length}/240</span>
-                <button
-                  onClick={enviarMensagem}
-                  disabled={texto.trim().length < 3}
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid #555',
-                    color: texto.trim().length >= 3 ? '#c8c4bc' : '#444',
-                    fontSize: '11px',
-                    letterSpacing: '0.18em',
-                    textTransform: 'uppercase',
-                    padding: '10px 24px',
-                    cursor: texto.trim().length >= 3 ? 'pointer' : 'default',
-                    transition: 'all 0.2s',
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                  onMouseEnter={e => {
-                    if (texto.trim().length >= 3) {
-                      e.target.style.background = '#f5f1ea'
-                      e.target.style.color = '#242428'
-                      e.target.style.borderColor = '#f5f1ea'
-                    }
-                  }}
-                  onMouseLeave={e => {
-                    e.target.style.background = 'transparent'
-                    e.target.style.color = texto.trim().length >= 3 ? '#c8c4bc' : '#444'
-                    e.target.style.borderColor = '#555'
-                  }}
-                >
-                  enviar
-                </button>
-              </div>
-
-              {erro && (
-                <p style={{ fontSize: '12px', color: '#c0705a', marginTop: '12px', lineHeight: 1.7 }}>
-                  {erro}
+            {enviado ? (
+              <div>
+                <p style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: '1.3rem',
+                  fontStyle: 'italic',
+                  color: '#9a9a9e',
+                  marginBottom: '16px',
+                }}>
+                  recebido ✦
                 </p>
-              )}
-            </>
-          )}
+                <p style={{ fontSize: '12px', color: '#666', lineHeight: 1.9 }}>
+                  sua mensagem entrou no sorteio.<br />
+                  volte amanhã às 3h — pode ser a sua.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  borderBottom: `1px solid ${focado ? '#5a5a5e' : '#35353a'}`,
+                  paddingBottom: '12px',
+                  marginBottom: '20px',
+                  transition: 'border-color 0.2s',
+                }}>
+                  <textarea
+                    value={texto}
+                    onChange={e => setTexto(e.target.value)}
+                    maxLength={240}
+                    placeholder="escreva algo..."
+                    rows={4}
+                    onFocus={() => setFocado(true)}
+                    onBlur={() => setFocado(false)}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      color: '#f0ece4',
+                      fontSize: '0.95rem',
+                      fontFamily: "'DM Sans', sans-serif",
+                      fontWeight: 300,
+                      resize: 'none',
+                      lineHeight: 1.8,
+                      caretColor: '#f0ece4',
+                    }}
+                  />
+                </div>
 
-          <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid #2e2e32' }}>
-            <p style={{ fontSize: '11px', color: '#555', lineHeight: 1.9 }}>
-              todo dia uma mensagem de alguém do mundo<br />
-              fica aqui. hoje é essa.
-            </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#555' }}>{texto.length}/240</span>
+                  <button
+                    onClick={enviarMensagem}
+                    disabled={texto.trim().length < 3}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #555',
+                      color: texto.trim().length >= 3 ? '#c8c4bc' : '#444',
+                      fontSize: '11px',
+                      letterSpacing: '0.18em',
+                      textTransform: 'uppercase',
+                      padding: '10px 24px',
+                      cursor: texto.trim().length >= 3 ? 'pointer' : 'default',
+                      transition: 'all 0.2s',
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                    onMouseEnter={e => {
+                      if (texto.trim().length >= 3) {
+                        e.target.style.background = '#f5f1ea'
+                        e.target.style.color = '#242428'
+                        e.target.style.borderColor = '#f5f1ea'
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      e.target.style.background = 'transparent'
+                      e.target.style.color = texto.trim().length >= 3 ? '#c8c4bc' : '#444'
+                      e.target.style.borderColor = '#555'
+                    }}
+                  >
+                    enviar
+                  </button>
+                </div>
+
+                {erro && (
+                  <p style={{ fontSize: '12px', color: '#c0705a', marginTop: '12px', lineHeight: 1.7 }}>
+                    {erro}
+                  </p>
+                )}
+              </>
+            )}
+
+            <div style={{ marginTop: '48px', paddingTop: '32px', borderTop: '1px solid #2e2e32' }}>
+              <p style={{ fontSize: '11px', color: '#555', lineHeight: 1.9 }}>
+                todo dia uma mensagem de alguém do mundo<br />
+                fica aqui. hoje é essa.
+              </p>
+            </div>
           </div>
-        </div>
 
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }
